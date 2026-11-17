@@ -3,6 +3,10 @@ import { CompanyTable } from "./company-table";
 
 const REPO = "https://github.com/cherylaurelia/o11-demo";
 const RECEIPTS = `${REPO}/blob/main/receipts/w26-route.jsonl`;
+
+const QUALIFY =
+  "https://github.com/o11-ai/o11-wallet-sdk/blob/33d7984/src/ostack/content/playbooks/gtm/steps/qualify.md#L15";
+
 const { summary, rows } = data;
 const totalUsd = (summary.totalMicros / 1_000_000).toFixed(5);
 
@@ -39,9 +43,10 @@ export default function Home() {
           All of YC W26, enriched through one o11 wallet for ${totalUsd}.
         </h1>
         <p className="mt-5 max-w-2xl text-base text-body sm:text-lg">
-          {summary.companies} companies, one <code className="rounded bg-soft px-1 font-mono text-[0.9em]">o11 batch</code> command
-          on <code className="rounded bg-soft px-1 font-mono text-[0.9em]">o11.companies.enrich</code>, no provider accounts.
-          The route found every one of them, most with teams under ten people.
+          The <code className="rounded bg-soft px-1 font-mono text-[0.9em]">o11.companies.enrich</code> route found all{" "}
+          {summary.companies}. But its <code className="rounded bg-soft px-1 font-mono text-[0.9em]">output</code> drops
+          headcount on every crustdata hit, and for {summary.outputDomainOtherName + 1} companies it names a domain that
+          points somewhere else.
         </p>
         <div className="mt-6 flex flex-wrap gap-2 text-sm">
           <a href={REPO} className="rounded-lg bg-ink px-4 py-2 text-white hover:bg-ink/90">
@@ -53,51 +58,66 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Results">
+      <p className="mt-8 text-sm text-body sm:hidden">
+        {summary.hits}/{summary.companies} hits · ${totalUsd} total* · {summary.byProvider.crustdata} free via crustdata ·{" "}
+        {summary.byProvider.crawl4ai} via crawl4ai
+      </p>
+      <section className="mt-10 hidden grid-cols-4 gap-3 sm:grid" aria-label="Results">
         <Stat value={`${summary.hits}/${summary.companies}`} label="route outcome: hit" />
-        <Stat value={`$${totalUsd}`} label="total billed, every row" />
+        <Stat value={`$${totalUsd}*`} label="total billed, every row" />
         <Stat value={`${summary.byProvider.crustdata}`} label="served free by crustdata" />
         <Stat value={`${summary.byProvider.crawl4ai}`} label="fell through to crawl4ai, $0.00115 each" />
       </section>
-
+      <p className="mt-2 text-xs text-muted">
+        * Two runs: o11&apos;s cache served {summary.cached} rows of this batch from an earlier run of mine, which paid
+        $0.00115 for one of them. A fresh rerun may differ by that much.
+      </p>
 
       <section className="mt-6 rounded-xl border border-line bg-card p-5" aria-labelledby="gaps">
         <h2 id="gaps" className="text-lg font-medium tracking-tight">
-          Two fields the route&apos;s <code className="font-mono text-base">output</code> gets wrong on crustdata hits
+          What reading only <code className="font-mono text-base">output</code> gets you
         </h2>
-        <div className="mt-4 grid gap-5 md:grid-cols-3">
-          <div className="text-sm text-body">
-            <h3 className="font-medium text-ink">No headcount, {summary.headcountDropped} of {summary.byProvider.crustdata}</h3>
-            <p className="mt-1">
-              The raw record has <code className="font-mono text-xs">employee_count_range</code>; output doesn&apos;t carry it.
-              Ostack&apos;s qualify step says enrich &ldquo;returns headcount&rdquo;.
-            </p>
-          </div>
-          <div className="text-sm text-body">
-            <h3 className="font-medium text-ink">Domain is all_domains[0], {summary.outputDomainDiffers} differ</h3>
-            <p className="mt-1">
-              {summary.outputDomainOtherName} carry a different name (moritzlegal.com → arcline-ai.com, foreman.co →
-              scoutout.ai). {summary.outputDomainDiffers - summary.outputDomainOtherName} are variants of the same name
-              (usechamber.io → usechamber.com), though one of those is maywoodai.com → shanghaimaywood.com.
-            </p>
-          </div>
-          <div className="text-sm text-body">
-            <h3 className="font-medium text-ink">What a wrong domain costs</h3>
-            <p className="mt-1">
-              <code className="font-mono text-xs">o11.people.search</code> owners at nextjs.org (Vercel&apos;s output.domain in
-              an earlier run): one software engineer with no Vercel tie, $0.0026. At shanghaimaywood.com: a $0.0245 paid
-              fallback, and one of the two people returned is an &ldquo;Owner, maywood&rdquo; in Itasca, not the New York startup. At maywoodai.com: the CEO, free.
-            </p>
-          </div>
-        </div>
-        <p className="mt-4 text-sm text-body">
-          Who it hits: code that reads only <code className="font-mono text-xs">output</code>, which the docs call
-          &ldquo;the answer&rdquo;. Agents reading the whole receipt were fine: in 40 Claude Sonnet runs on these receipts
-          (headcount judgments and &ldquo;which domain would you search&rdquo;) they took both from the raw record every time.
-        </p>
-        <pre className="mt-3 overflow-x-auto rounded-lg bg-soft p-3 font-mono text-xs leading-relaxed text-ink">
+        <ul className="mt-3 space-y-3 text-sm text-body">
+          <li>
+            <strong className="font-medium text-ink">The wrong people.</strong> Vercel&apos;s output.domain came back as
+            nextjs.org (earlier 50-company run). <code className="font-mono text-xs">o11.people.search</code> for owners there
+            returned one software engineer with no Vercel tie ($0.0026). For Maywood, shanghaimaywood.com paid a $0.0245
+            fallback, and one of the two people returned is an &ldquo;Owner, maywood&rdquo; in Itasca, not the New York
+            startup. The right domain, maywoodai.com, returned the CEO for free.
+          </li>
+          <li>
+            <strong className="font-medium text-ink">
+              Only {summary.outputDomainOtherName} (+1) domains point elsewhere.
+            </strong>{" "}
+            output.domain is <code className="font-mono text-xs">all_domains[0]</code>, and it differs from the domain looked up
+            for {summary.outputDomainDiffers} of {summary.byProvider.crustdata}. {summary.outputDomainOtherName} carry another
+            name (moritzlegal.com → arcline-ai.com, foreman.co → scoutout.ai), plus maywoodai.com → shanghaimaywood.com. The
+            other {summary.outputDomainDiffers - summary.outputDomainOtherName - 1} are harmless variants (usechamber.io →
+            usechamber.com).
+          </li>
+          <li>
+            <strong className="font-medium text-ink">
+              No headcount, {summary.headcountDropped} of {summary.byProvider.crustdata}.
+            </strong>{" "}
+            The raw record has <code className="font-mono text-xs">employee_count_range</code> every time; output leaves it
+            out.
+          </li>
+        </ul>
+        <pre className="mt-4 overflow-x-auto rounded-lg bg-soft p-3 font-mono text-xs leading-relaxed text-ink">
           {mapping}
         </pre>
+        <p className="mt-3 text-xs text-muted">
+          Why it counts as a bug: the docs list <code className="font-mono">result.output</code> as &ldquo;The answer&rdquo; (
+          <a className="underline" href="https://docs.o11.ai/execution/">
+            docs.o11.ai/execution
+          </a>
+          ), and Ostack&apos;s qualify step says enrich &ldquo;returns headcount and industry&rdquo; (
+          <a className="underline" href={QUALIFY}>
+            steps/qualify.md, line 15
+          </a>
+          ). Agents reading the whole receipt were fine: in 40 Claude Sonnet runs on these receipts they took headcount and
+          domain from the raw record every time.
+        </p>
       </section>
 
       <section className="mt-12">
@@ -121,10 +141,6 @@ export default function Home() {
             <li>A new o11 account&apos;s $1 free credit, with a CLI key limited to running tools (no cards, no API keys).</li>
             <li>
               The route tried crustdata first (free). On a miss it fell through to crawl4ai and billed only that call.
-            </li>
-            <li>
-              {summary.cached} rows came from o11&apos;s cache of an earlier run of mine, at $0 (that run paid $0.00115 for one of
-              them). The ${totalUsd} includes it.
             </li>
             <li>
               <code className="font-mono text-xs">--run-max</code> caps the whole run. Rerunning the same command with the same

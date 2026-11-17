@@ -70,11 +70,12 @@ export function CompanyTable({ rows }: { rows: CompanyRow[] }) {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-card">
-        <table className="w-full min-w-[760px] text-left text-sm">
+        <table className="w-full min-w-[880px] text-left text-sm">
           <thead className="border-b border-line bg-soft text-xs text-muted">
             <tr>
               <th scope="col" className="px-3 py-2 font-medium">Company</th>
               <th scope="col" className="px-3 py-2 font-medium">Site looked up</th>
+              <th scope="col" className="px-3 py-2 font-medium">output.domain</th>
               <th scope="col" className="px-3 py-2 font-medium">Headcount</th>
               <th scope="col" className="px-3 py-2 font-medium">Founded</th>
               <th scope="col" className="px-3 py-2 font-medium">Industry</th>
@@ -89,9 +90,13 @@ export function CompanyTable({ rows }: { rows: CompanyRow[] }) {
                   <div className="max-w-xs text-xs text-muted">{row.oneLiner}</div>
                 </td>
                 <td className="px-3 py-2 font-mono text-xs">
-                  <div>{row.inputDomain}</div>
-                  {otherName(row) && <div className="mt-1 text-[#b45309]">output.domain: {row.outputDomain}</div>}
-                  {sameName(row) && <div className="mt-1 text-muted">output.domain: {row.outputDomain}</div>}
+                  {row.inputDomain}
+                </td>
+                <td
+                  className={`px-3 py-2 font-mono text-xs ${otherName(row) ? "text-[#b45309]" : sameName(row) ? "text-ink" : "text-muted"}`}
+                >
+                  {row.outputDomain ?? "–"}
+                  {otherName(row) && <div className="font-sans">other name</div>}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {row.headcountRaw ?? row.headcountInOutput ?? "–"}
