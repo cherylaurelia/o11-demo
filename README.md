@@ -19,9 +19,12 @@ The docs call `result.output` "The answer" (https://docs.o11.ai/execution/). On 
 - **Headcount is not in `output`** for 186/186, although the raw record has `employee_count_range` in every one.
   Ostack's qualify step says `o11.companies.enrich` "returns headcount and industry"
   (`src/ostack/content/playbooks/gtm/steps/qualify.md` in o11-ai/o11-wallet-sdk).
-- **`output.domain` is `basic_info.all_domains[0]`** (186/186). For 18 it differs from the domain looked up,
-  often an older name: moritzlegal.com → arcline-ai.com, maywoodai.com → shanghaimaywood.com, vercel.com → nextjs.org
-  (Vercel was in an earlier 50-company test).
+- **`output.domain` is `basic_info.all_domains[0]`** (186/186). For 18 it differs from the domain looked up:
+  5 carry a different name (moritzlegal.com → arcline-ai.com, foreman.co → scoutout.ai), 13 are variants of the same
+  name (usechamber.io → usechamber.com), though one of those is maywoodai.com → shanghaimaywood.com. Vercel (in an earlier 50-company test) came back as nextjs.org.
+- What a wrong domain costs: `o11.people.search` for owners at nextjs.org returned one engineer with no Vercel tie
+  ($0.0026); at shanghaimaywood.com it fell through to a $0.0245 provider and one of two people was an
+  "Owner, maywood" in Itasca, not the New York startup. At maywoodai.com it returned the CEO, free.
 
 Suggested mapping for the crustdata step: `domain: matched_on ?? primary_domain`, `employees: employee_count_range`.
 

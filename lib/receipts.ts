@@ -97,3 +97,10 @@ export function outputDomainDiffers(row: CompanyRow): boolean {
 export function headcountDropped(row: CompanyRow): boolean {
   return row.headcountRaw !== null && row.headcountInOutput === null;
 }
+
+/** True when output.domain still carries the company's first name word (usechamber.com for Chamber). */
+export function outputDomainKeepsName(row: CompanyRow): boolean {
+  const word = row.name.toLowerCase().split(/[^a-z0-9]+/).find((part) => part !== "") ?? "";
+
+  return word !== "" && row.outputDomain !== null && row.outputDomain.includes(word);
+}

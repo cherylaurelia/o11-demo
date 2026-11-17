@@ -26,9 +26,8 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-5xl px-5 pb-16">
       <nav className="flex items-center justify-between py-5 text-sm">
-        <span className="flex items-center gap-2 font-medium">
-          <span aria-hidden className="h-4 w-5 rounded-[4px] bg-[linear-gradient(180deg,#f2c94c_0_33%,#eb5757_33%_66%,#4494e5_66%)]" />
-          YC W26 × o11 wallet
+        <span className="font-medium">
+          Unofficial demo <span className="text-muted">· Cheryl Aurelia</span>
         </span>
         <a href={REPO} className="rounded-md bg-ink px-3 py-1.5 text-white hover:bg-ink/90">
           Repo
@@ -59,6 +58,46 @@ export default function Home() {
         <Stat value={`$${totalUsd}`} label="total billed, every row" />
         <Stat value={`${summary.byProvider.crustdata}`} label="served free by crustdata" />
         <Stat value={`${summary.byProvider.crawl4ai}`} label="fell through to crawl4ai, $0.00115 each" />
+      </section>
+
+
+      <section className="mt-6 rounded-xl border border-line bg-card p-5" aria-labelledby="gaps">
+        <h2 id="gaps" className="text-lg font-medium tracking-tight">
+          Two fields the route&apos;s <code className="font-mono text-base">output</code> gets wrong on crustdata hits
+        </h2>
+        <div className="mt-4 grid gap-5 md:grid-cols-3">
+          <div className="text-sm text-body">
+            <h3 className="font-medium text-ink">No headcount, {summary.headcountDropped} of {summary.byProvider.crustdata}</h3>
+            <p className="mt-1">
+              The raw record has <code className="font-mono text-xs">employee_count_range</code>; output doesn&apos;t carry it.
+              Ostack&apos;s qualify step says enrich &ldquo;returns headcount&rdquo;.
+            </p>
+          </div>
+          <div className="text-sm text-body">
+            <h3 className="font-medium text-ink">Domain is all_domains[0], {summary.outputDomainDiffers} differ</h3>
+            <p className="mt-1">
+              {summary.outputDomainOtherName} carry a different name (moritzlegal.com → arcline-ai.com, foreman.co →
+              scoutout.ai). {summary.outputDomainDiffers - summary.outputDomainOtherName} are variants of the same name
+              (usechamber.io → usechamber.com), though one of those is maywoodai.com → shanghaimaywood.com.
+            </p>
+          </div>
+          <div className="text-sm text-body">
+            <h3 className="font-medium text-ink">What a wrong domain costs</h3>
+            <p className="mt-1">
+              <code className="font-mono text-xs">o11.people.search</code> owners at nextjs.org (Vercel&apos;s output.domain in
+              an earlier run): one software engineer with no Vercel tie, $0.0026. At shanghaimaywood.com: a $0.0245 paid
+              fallback, and one of the two people returned is an &ldquo;Owner, maywood&rdquo; in Itasca, not the New York startup. At maywoodai.com: the CEO, free.
+            </p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-body">
+          Who it hits: code that reads only <code className="font-mono text-xs">output</code>, which the docs call
+          &ldquo;the answer&rdquo;. Agents reading the whole receipt were fine: in 40 Claude Sonnet runs on these receipts
+          (headcount judgments and &ldquo;which domain would you search&rdquo;) they took both from the raw record every time.
+        </p>
+        <pre className="mt-3 overflow-x-auto rounded-lg bg-soft p-3 font-mono text-xs leading-relaxed text-ink">
+          {mapping}
+        </pre>
       </section>
 
       <section className="mt-12">
@@ -94,33 +133,10 @@ export default function Home() {
           </ul>
         </div>
 
-        <div className="rounded-xl border border-line bg-card p-5">
-          <h2 className="text-xl font-medium tracking-tight">Two fields in the route&apos;s output</h2>
-          <p className="mt-2 text-sm text-body">
-            The docs call <code className="font-mono text-xs">result.output</code> &ldquo;the answer&rdquo;. On the{" "}
-            {summary.byProvider.crustdata} crustdata hits:
-          </p>
-          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-body">
-            <li>
-              <strong className="font-medium text-ink">No headcount</strong> in output for {summary.headcountDropped} of{" "}
-              {summary.byProvider.crustdata}, although the raw record has{" "}
-              <code className="font-mono text-xs">employee_count_range</code>. Ostack&apos;s qualify step says enrich
-              &ldquo;returns headcount&rdquo;.
-            </li>
-            <li>
-              <strong className="font-medium text-ink">output.domain</strong> is{" "}
-              <code className="font-mono text-xs">all_domains[0]</code>. It differs from the domain looked up for{" "}
-              {summary.outputDomainDiffers}, often a pre-pivot name: moritzlegal.com → arcline-ai.com, maywoodai.com →
-              shanghaimaywood.com.
-            </li>
-          </ul>
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-soft p-3 font-mono text-xs leading-relaxed text-ink">
-            {mapping}
-          </pre>
-          <p className="mt-3 text-xs text-muted">
-            Agents reading the whole receipt cope: in a small test (40 Sonnet runs on these receipts) they took headcount and
-            domain from the raw record every time. Code that reads only <code className="font-mono">output</code> gets the
-            gaps.
+        <div className="text-sm text-body md:pt-9">
+          <p>
+            Receipts for every row are in the repo, with the parser that reads them and tests that recount the
+            page&apos;s counts from the receipts.
           </p>
         </div>
       </section>

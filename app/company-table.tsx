@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { type CompanyRow, outputDomainDiffers } from "@/lib/receipts";
+import { type CompanyRow, headcountDropped, outputDomainDiffers, outputDomainKeepsName } from "@/lib/receipts";
 
-type View = "all" | "domain";
+type View = "all" | "headcount" | "otherName" | "sameName";
+
+const otherName = (row: CompanyRow) => outputDomainDiffers(row) && !outputDomainKeepsName(row);
+const sameName = (row: CompanyRow) => outputDomainDiffers(row) && outputDomainKeepsName(row);
+
+const keep: Record<View, (row: CompanyRow) => boolean> = {
+  all: () => true,
+  headcount: headcountDropped,
+  otherName,
+  sameName,
+};
 
 function formatUsd(micros: number): string {
   return micros === 0 ? "$0" : `$${(micros / 1_000_000).toFixed(5).replace(/0+$/, "")}`;
@@ -16,11 +26,16 @@ export function CompanyTable({ rows }: { rows: CompanyRow[] }) {
 
   const shown = rows.filter(
     (row) =>
-      (view === "all" || outputDomainDiffers(row)) &&
+      keep[view](row) &&
       (needle === "" || `${row.name} ${row.oneLiner} ${row.inputDomain} ${row.industry ?? ""}`.toLowerCase().includes(needle)),
   );
 
-  const domainCount = rows.filter(outputDomainDiffers).length;
+  const views: { id: View; label: string }[] = [
+    { id: "all", label: `All ${rows.length}` },
+    { id: "headcount", label: `Headcount only in raw (${rows.filter(headcountDropped).length})` },
+    { id: "otherName", label: `output.domain: different name (${rows.filter(otherName).length})` },
+    { id: "sameName", label: `output.domain: same-name variant (${rows.filter(sameName).length})` },
+  ];
 
   return (
     <div>
@@ -36,23 +51,18 @@ export function CompanyTable({ rows }: { rows: CompanyRow[] }) {
           placeholder="Search 197 companies, e.g. fintech"
           className="h-9 w-full rounded-lg border border-line bg-card px-3 text-sm outline-none focus:border-ink sm:w-72"
         />
-        <div className="flex gap-1 rounded-lg bg-soft p-1 text-sm" role="group" aria-label="Rows to show">
-          <button
-            type="button"
-            aria-pressed={view === "all"}
-            onClick={() => setView("all")}
-            className={`rounded-md px-3 py-1 ${view === "all" ? "bg-card text-ink shadow-sm" : "text-body"}`}
-          >
-            All {rows.length}
-          </button>
-          <button
-            type="button"
-            aria-pressed={view === "domain"}
-            onClick={() => setView("domain")}
-            className={`rounded-md px-3 py-1 ${view === "domain" ? "bg-card text-ink shadow-sm" : "text-body"}`}
-          >
-            output.domain ≠ site ({domainCount})
-          </button>
+        <div className="flex flex-wrap gap-1 rounded-lg bg-soft p-1 text-sm" role="group" aria-label="Rows to show">
+          {views.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={view === id}
+              onClick={() => setView(id)}
+              className={`rounded-md px-3 py-1 ${view === id ? "bg-card text-ink shadow-sm" : "text-body"}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <span className="text-sm text-muted" aria-live="polite">
           {shown.length} shown
@@ -80,9 +90,8 @@ export function CompanyTable({ rows }: { rows: CompanyRow[] }) {
                 </td>
                 <td className="px-3 py-2 font-mono text-xs">
                   <div>{row.inputDomain}</div>
-                  {outputDomainDiffers(row) && (
-                    <div className="mt-1 text-[#b45309]">output.domain: {row.outputDomain}</div>
-                  )}
+                  {otherName(row) && <div className="mt-1 text-[#b45309]">output.domain: {row.outputDomain}</div>}
+                  {sameName(row) && <div className="mt-1 text-muted">output.domain: {row.outputDomain}</div>}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {row.headcountRaw ?? row.headcountInOutput ?? "–"}

@@ -1,6 +1,6 @@
 // Builds data/w26.json (what the page shows) from receipts/w26-route.jsonl (what o11 returned).
 import { readFileSync, writeFileSync } from "node:fs";
-import { headcountDropped, outputDomainDiffers, parseReceipt } from "../lib/receipts.ts";
+import { headcountDropped, outputDomainDiffers, outputDomainKeepsName, parseReceipt } from "../lib/receipts.ts";
 
 const lines = readFileSync(new URL("../receipts/w26-route.jsonl", import.meta.url), "utf8").trim().split("\n");
 const rows = lines.map(parseReceipt).toSorted((a, b) => a.name.localeCompare(b.name));
@@ -20,6 +20,7 @@ const summary = {
   cached: rows.filter((row) => row.cached).length,
   headcountDropped: rows.filter(headcountDropped).length,
   outputDomainDiffers: rows.filter(outputDomainDiffers).length,
+  outputDomainOtherName: rows.filter((row) => outputDomainDiffers(row) && !outputDomainKeepsName(row)).length,
 };
 
 writeFileSync(new URL("../data/w26.json", import.meta.url), JSON.stringify({ summary, rows }, null, 1) + "\n");

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bareDomain, headcountDropped, outputDomainDiffers, parseReceipt } from "./receipts.ts";
+import { bareDomain, headcountDropped, outputDomainDiffers, outputDomainKeepsName, parseReceipt } from "./receipts.ts";
 
 const lines = readFileSync(new URL("../receipts/w26-route.jsonl", import.meta.url), "utf8").trim().split("\n");
 
@@ -52,4 +52,15 @@ test("whole batch: every row a hit; counts used on the page", () => {
   assert.equal(rows.filter((row) => row.provider === "crustdata").length, 186);
   assert.equal(rows.filter(headcountDropped).length, 186);
   assert.equal(rows.filter(outputDomainDiffers).length, 18);
+});
+
+test("domain mismatches split into same-name variants and different names", () => {
+  const differs = lines.map(parseReceipt).filter(outputDomainDiffers);
+  assert.equal(outputDomainKeepsName(byDomain("usechamber.io")), true);
+  assert.equal(outputDomainKeepsName(byDomain("foreman.co")), false);
+  assert.equal(differs.filter(outputDomainKeepsName).length, 13);
+  assert.deepEqual(
+    differs.filter((row) => !outputDomainKeepsName(row)).map((row) => row.outputDomain).toSorted(),
+    ["arcline-ai.com", "calliope-ai.com", "creatorcheck.io", "openvision.engineering", "scoutout.ai"],
+  );
 });

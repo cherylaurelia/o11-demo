@@ -10,7 +10,8 @@
   "totalMicros": 12650,
   "cached": 40,
   "headcountDropped": 186,
-  "outputDomainDiffers": 18
+  "outputDomainDiffers": 18,
+  "outputDomainOtherName": 5
  },
  "rows": [
   {
