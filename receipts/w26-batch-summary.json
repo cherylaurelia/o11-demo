@@ -1,0 +1,12 @@
+{
+ "tool": "o11.companies.enrich",
+ "runId": "3df635b4-2731-49a5-a390-7859ce9c6d11",
+ "journal": "runs/w26-journal.jsonl",
+ "rows": 197,
+ "succeeded": 197,
+ "failed": 0,
+ "skipped": 0,
+ "cancelled": 0,
+ "remaining": 0,
+ "billedMicros": "11500"
+}

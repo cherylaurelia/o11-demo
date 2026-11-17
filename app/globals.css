@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* From o11.ai: Inter, near-white #fafafa, black primary buttons, #e5e5e5 secondary,
+   zinc greys (#18181b, #3f3f46, #f4f4f5), accent blue #4494e5. */
+@theme {
+  --color-ink: #18181b;
+  --color-body: #3f3f46;
+  --color-muted: #71717a;
+  --color-paper: #fafafa;
+  --color-card: #ffffff;
+  --color-line: #e5e5e5;
+  --color-soft: #f4f4f5;
+  --color-accent: #4494e5;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, Menlo, monospace;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+code,
+pre {
+  font-variant-ligatures: none;
+}
